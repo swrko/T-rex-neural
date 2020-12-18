@@ -46,6 +46,10 @@ def main():
         print(layer)
 
 
+
+
+
+
 # Initialize a network
 def init_network(n_inputs, n_hidden, n_outputs):
     network = list()
