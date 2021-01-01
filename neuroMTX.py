@@ -7,24 +7,14 @@ import numpy as np
 def activate(weights, inputs):
     output = list()
     activation = inputs.dot(weights)
-    print(activation)
     for iterator in activation:
         output.append(1.0 / (1.0 + exp(-iterator)))
-    print(output)
+
     return np.array(output)
 
 
-def forwardPropagation(network, inputs):
-    inputs = normalizeInputs(inputs)
-    # print(np.array(network[0]))
-    # print("\n")
-    # print(inputs)
-    # print("\n")
-    # inputs = activate(network[0], inputs)
-    # # print("\n")
-    # # print(np.array(network[1]))
-    # # print("\n")
-    # outputs = activate(network[1], inputs)
+def feed_forward_propagation(network, inputs):
+    inputs = normalize_inputs(inputs)
 
     for layer in network:
         outputs = activate(layer, inputs)
@@ -33,13 +23,35 @@ def forwardPropagation(network, inputs):
     return outputs
 
 
+def back_propagation():
+    pass
+
+
+def cost_function(network, inputs, y):
+    outputs = feed_forward_propagation(network, inputs)
+    d3 = np.multiply(-(y - outputs), d_sigmoid())
+    pass
+
+
+def sigmoid(z):
+    return 1.0 / (1.0 + np.exp(-z))
+
+
+# s stands for output of sigmoid function
+# def derSigmoid(s):
+#     return s * (1.0 - s)
+
+def d_sigmoid(z):
+    return np.exp(-z) / ((1 + np.exp(-z)) ** 2)
+
+
 def main():
     inputs = np.array([100, 120])  # testovaci input
-    network = initialiseNetwork(2, 5, 2)
-    forwardPropagation(network, inputs)
+    network = initialise_network(2, 5, 2)
+    feed_forward_propagation(network, inputs)
 
 
-def normalizeInputs(inputs):
+def normalize_inputs(inputs):
     min = 0
     max = 400
     new_inputs = []
@@ -50,24 +62,17 @@ def normalizeInputs(inputs):
 
 
 # Initialize a network
-def initialiseNetwork(n_inputs, n_hidden, n_outputs):
+def initialise_network(n_inputs, n_hidden, n_outputs):
     seed(1)
     w_hdl1 = np.array([[random() for i in range(n_hidden)] for i in range(n_inputs)])
     w_ol = np.array([[random() for i in range(n_outputs)] for i in range(n_hidden)])
-    # a_hdl1 = np.zeros((n_hidden, 1))
-    # a_ol = np.zeros((n_outputs, 1))
-    # w_ = (w_hdl1, w_ol)
+    print(w_hdl1)
+    print("\n")
 
-    # print(w_)
+    print(w_ol)
 
-    network = (w_hdl1, w_ol)
-    return network
-    # # matrix = np.ndarray()
-    # print(weights[1])
-    # print(weights[2])
-    #
-    # # a.dot(b)   ->    a*b'
-    # print(weights[1].dot(weights[2]))
+    weights = (w_hdl1, w_ol)
+    return weights
 
 
 if __name__ == '__main__':
