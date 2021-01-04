@@ -3,13 +3,40 @@ import cv2
 import time
 from mss import mss
 from pynput.keyboard import Key, Listener
+import re
 
 key_buffer = []
 frame_stamp = 0
 
 
 def fill_empty_inputs():
-    pass
+    with open("keys.txt", "r") as file:
+        f_lines = file.readlines()
+
+    regex = []
+    lines = []
+    for line in f_lines:
+        regex.append(int(re.findall(r"\d+", line)[0]))
+        lines.append(line.split(","))
+    max_stamp = max(regex)
+    new_lines = []
+
+    for stamp in range(max_stamp):
+        if stamp != regex[0]:
+            new_lines.append([0, 0])
+        else:
+            if lines[0][0] == str("Key.up"):
+                new_lines.append([1, 0])
+            elif lines[0][0] == str("Key.down"):
+                new_lines.append([0, 1])
+            else:
+                new_lines.append([0, 0])
+                print("i should not be here!")
+            regex.pop(0)
+            lines.pop(0)
+
+    print(new_lines)
+    print(len(new_lines))
 
 
 def on_press(key):
@@ -60,6 +87,7 @@ def main():
                 write_to_file(key_buffer)
 
             if (cv2.waitKey(10) & 0xFF == ord('q')) or (frame_stamp == 50000):
+                key_buffer.append(frame_stamp)
                 write_to_file(key_buffer)
                 out.release()
                 cv2.destroyAllWindows()
@@ -83,3 +111,9 @@ listener.start()
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     main()
+    fill_empty_inputs()
+
+# regex cheat sheet:  https://www.rexegg.com/regex-quickstart.html
+# [-+]?\d*\.\d+|  -> [aspon jedno zo znamienka], ak je viac ber prve ?,
+# ziadne alebo viac digitov,
+# oddelenie desatinneho bodkou,a za nim jeden alebo viac digitov, or statement
