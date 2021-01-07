@@ -1,6 +1,7 @@
 from math import exp
 from random import random, seed
 import numpy as np
+import re
 
 
 class NNetwork(object):
@@ -17,9 +18,9 @@ class NNetwork(object):
         self.w_2 = np.array([[random() for i in range(n_outputs)] for i in range(n_hidden)])
 
         # default learning rate
-        self.set_learning_rate(3)
+        self.set_learning_rate(0.1)
 
-    def feed_forward_propagation(self):
+    def forward_propagation(self):
         # name conventions:
         # w - weights between layers
         # z - weighted input of activation function
@@ -38,6 +39,7 @@ class NNetwork(object):
         return 1.0 / (1.0 + np.exp(-z))
 
     def d_sigmoid(self, z):
+        # print("Z: {}".format(z))
         return np.exp(-z) / ((1.0 + np.exp(-z)) ** 2.0)
 
     # s stands for output of sigmoid function
@@ -47,6 +49,7 @@ class NNetwork(object):
     def normalize_inputs(self, inputs, min, max):
         # min = 0
         # max = 400
+        return inputs/max
         new_inputs = []
         for input in inputs:
             new_input = (input - min) / (max - min)
@@ -110,19 +113,82 @@ class NNetwork(object):
     def get_weights2(self):
         return self.w_2
 
+    def flaten_weights(self):
+        # print("Flatened weights: {}".format(np.concatenate([self.get_weights1().ravel(),self.get_weights2().ravel()])))
+        return np.concatenate([self.get_weights1().ravel(), self.get_weights2().ravel()])
+
+    def parse_weights(self, w):
+        # reshape
+        w1 = w[0:self.n_inputs * self.n_hidden]
+        w2 = w[self.n_inputs * self.n_hidden:(len(w))]
+
+        w1 = w1.reshape((self.n_inputs, self.n_hidden))
+        w2 = w2.reshape((self.n_hidden, self.n_outputs))
+        return w1, w2
+        # print("w1: {}".format(w1))
+        # print("w2: {}".format(w2))
+
     def back_propagation(self, desired_outputs):
+        # set desired output
         self.set_desired_outputs(desired_outputs)
 
-        self.feed_forward_propagation()
-        cost1 = self.cost_function()
+        # FFD
+        self.forward_propagation()
 
+        # calculate error
         dw_1, dw_2 = self.d_cost_function()
+
+        # apply error to weights
         self.w_1 = self.w_1 - self.lr * dw_1
         self.w_2 = self.w_2 - self.lr * dw_2
-        self.feed_forward_propagation()
-        cost2 = self.cost_function()
-        print("cost1: {}   cost2: {} ".format(cost1, cost2))
-        print("outputs: {}".format(self.outputs))
+
+    def train_gradient_descent(self, inputs, desired_outputs):
+        # for minibatch -> input has to be matrice, backprop error wil be summed for each input by matrix multiplication
+        # normalize input and set it
+        # print("inputs: {} \n outputs: {}".format(inputs,desired_outputs))
+        self.set_inputs(self.normalize_inputs(inputs, 0, 400))
+        # backprop - set_desired_output, FFD, gradient error, apply error
+        self.back_propagation(desired_outputs)
+
+    def feed_forward_propagation(self, inputs):
+        self.set_inputs(self.normalize_inputs(inputs, 0, 400))
+        self.forward_propagation()
+        return self.get_outputs()
+
+    def write_weights_to_file(self):
+        with open("neuroMTX.txt", "a") as file:
+            file.write(str(self.get_weights1()) + ";\n")
+            file.write(str(self.get_weights2()) + ";\n")
+        print("Weights was written succesfully!")
+
+    def read_weights_from_file(self):
+        w1 = []
+        w2 = []
+        with open("neuroMTX.txt", "r") as file:
+            r = file.read()
+            r = r.split(";")
+
+            r[0] = r[0].replace("[", "")
+            r[0] = r[0].replace("]", "")
+            r[0] = r[0].splitlines()
+
+            r[1] = r[1].replace("[", "")
+            r[1] = r[1].replace("]", "")
+            r[1] = r[1].splitlines()
+
+            for line in r[0]:
+                regex = re.findall(r"[-+]?\d*\.\d+|\d+", line)
+                for number in regex:
+                    w1.append(float(number))
+
+            for line in r[1]:
+                regex = re.findall(r"[-+]?\d*\.\d+|\d+", line)
+                for number in regex:
+                    w2.append(float(number))
+
+        self.set_weights1(np.array(w1).reshape((self.n_inputs, self.n_hidden)))
+        self.set_weights2(np.array(w2).reshape((self.n_hidden, self.n_outputs)))
+        print("Weights was read succesfully!")
 
 
 def get_params(N):
@@ -145,7 +211,7 @@ def set_params(N, params):
 
 
 def compute_gradients(N):
-    N.feed_forward_propagation()
+    N.forward_propagation()
     dw1, dw2 = N.d_cost_function()
     return np.concatenate((dw1.ravel(), dw2.ravel()))
 
@@ -159,11 +225,11 @@ def compute_numerical_gradient(N):
     for i in range(len(params_initial)):
         perturb[i] = e
         set_params(N, params_initial + perturb)
-        N.feed_forward_propagation()
+        N.forward_propagation()
         loss2 = N.cost_function()
 
         set_params(N, params_initial - perturb)
-        N.feed_forward_propagation()
+        N.forward_propagation()
         loss1 = N.cost_function()
 
         numgrad[i] = (loss2 - loss1) / (2 * e)
@@ -186,7 +252,7 @@ def main():
     Network.set_inputs(Network.normalize_inputs(inputs, 0, 400))
     print("inputs: {}".format(Network.get_inputs()))
 
-    Network.feed_forward_propagation()
+    Network.forward_propagation()
     print("outputs: {}".format(Network.get_outputs()))
     print("inputs: {}".format(Network.get_inputs()))
 
