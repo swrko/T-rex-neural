@@ -26,7 +26,7 @@ class DatasetCreator():
     def __init__(self):
         global key_buffer, frame_stamp
 
-        self.list_of_inputs = []
+        self.list_of_outputs = []
         self.max_stamp = 0
 
     def write_to_file(self, keys):
@@ -65,7 +65,7 @@ class DatasetCreator():
 
         # print(new_lines)
         # print(len(new_lines))
-        self.list_of_inputs = new_lines
+        self.list_of_outputs = new_lines
         self.max_stamp = max_stamp
 
     def create_dataset(self, name="test.avi"):
@@ -105,8 +105,8 @@ class DatasetCreator():
             # next frame
             frame_stamp += 1
 
-    def get_list_of_inputs(self):
-        return self.list_of_inputs
+    def get_list_of_outputs(self):
+        return self.list_of_outputs
 
     def get_max_stamp(self):
         return self.max_stamp

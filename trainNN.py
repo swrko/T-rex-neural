@@ -1,9 +1,12 @@
 import numpy as np
+import time
+import dataset_creator as DC
 import neuroMTX as NN
 import cv2
 from mss import mss
-import os
-import time
+
+
+# spustat ako script
 
 def inputs_from_process_img(image):
     # convert to gray
@@ -32,11 +35,13 @@ def inputs_from_process_img(image):
 
     return input
 
-    # print(firstM[0][0])  # distance
-    # len(firstM[0]) == 0 DAS IST GUT
 
-
-def train_NN(network, dsc):
+def main():
+    # TODO: if not empty file with weigths read
+    network = NN.NNetwork(2, 15, 2)
+    network.read_weights_from_file()
+    dsc = DC.DatasetCreator()
+    dsc.fill_empty_inputs("keys.txt")
     cap = cv2.VideoCapture("neuro_test2.avi")
     outputs = dsc.get_list_of_outputs()
 
@@ -47,7 +52,6 @@ def train_NN(network, dsc):
             inputs = inputs_from_process_img(frame)
             # train
             network.train_gradient_descent(inputs, outputs[0])
-
             outputs.pop(0)
             cv2.imshow("cap", frame)
 
@@ -55,43 +59,18 @@ def train_NN(network, dsc):
                 cap.release()
                 break
             current_stamp += 1
+
         progress = int((current_stamp / dsc.get_max_stamp()) * 100.0)
         if (progress % 10) == 0:
             print("progress: {}".format(progress))
 
         if progress == 100:
-            break
-
-def testNN(network):
-    network.read_weights_from_file()
-    # trained Network
-    sct = mss()
-
-    while (True):
-        screen_np = np.array(sct.grab({'top': 0, 'left': 0, 'width': 600, 'height': 200}))
-        cv2.imshow("Screencapture:", screen_np)
-        inputs = inputs_from_process_img(screen_np)
-        outputs = network.feed_forward_propagation(inputs)
-        print("outputs: {}".format(outputs))
-
-        # TODO: apply outputs to game -> decide_function()
-
-
-        if cv2.waitKey(15) & 0xFF == ord('q'):
+            cap.release()
             cv2.destroyAllWindows()
             break
 
-def main():
-    network = NN.NNetwork(2, 15, 2)
     network.write_weights_to_file()
-    for i in range(10):
-        os.system("trainNN.py")
-
 
 
 if __name__ == '__main__':
     main()
-
-
-
-

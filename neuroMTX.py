@@ -18,7 +18,7 @@ class NNetwork(object):
         self.w_2 = np.array([[random() for i in range(n_outputs)] for i in range(n_hidden)])
 
         # default learning rate
-        self.set_learning_rate(0.1)
+        self.set_learning_rate(0.2)
 
     def forward_propagation(self):
         # name conventions:
@@ -49,7 +49,7 @@ class NNetwork(object):
     def normalize_inputs(self, inputs, min, max):
         # min = 0
         # max = 400
-        return inputs/max
+        return inputs / max
         new_inputs = []
         for input in inputs:
             new_input = (input - min) / (max - min)
@@ -156,7 +156,7 @@ class NNetwork(object):
         return self.get_outputs()
 
     def write_weights_to_file(self):
-        with open("neuroMTX.txt", "a") as file:
+        with open("neuroMTX.txt", "w") as file:
             file.write(str(self.get_weights1()) + ";\n")
             file.write(str(self.get_weights2()) + ";\n")
         print("Weights was written succesfully!")
@@ -177,12 +177,11 @@ class NNetwork(object):
             r[1] = r[1].splitlines()
 
             for line in r[0]:
-                regex = re.findall(r"[-+]?\d*\.\d+|\d+", line)
+                regex = re.findall(r"[-+]?\d*\.\d+[eE][-+]?\d+|[-+]?\d*\.\d+|\d+", line)
                 for number in regex:
                     w1.append(float(number))
-
             for line in r[1]:
-                regex = re.findall(r"[-+]?\d*\.\d+|\d+", line)
+                regex = re.findall(r"[-+]?\d*\.\d+|\d+|[-+]?\d*\.\d+[eE][-+]?\d+", line)
                 for number in regex:
                     w2.append(float(number))
 
