@@ -181,7 +181,7 @@ class NNetwork(object):
                 for number in regex:
                     w1.append(float(number))
             for line in r[1]:
-                regex = re.findall(r"[-+]?\d*\.\d+|\d+|[-+]?\d*\.\d+[eE][-+]?\d+", line)
+                regex = re.findall(r"[-+]?\d*\.\d+[eE][-+]?\d+|[-+]?\d*\.\d+|\d+", line)
                 for number in regex:
                     w2.append(float(number))
 
@@ -200,12 +200,10 @@ def set_params(N, params):
     w1_end = N.n_hidden * N.n_inputs
     w1 = np.reshape(params[w1_start:w1_end],
                     (N.n_inputs, N.n_hidden))
-    # print("w1: {}".format(w1))
     N.set_weights1(w1)
     w2_end = w1_end + (N.n_hidden * N.n_outputs)
     w2 = np.reshape(params[w1_end:w2_end],
                     (N.n_hidden, N.n_outputs))
-    # print("w2: {}".format(w2))
     N.set_weights2(w2)
 
 

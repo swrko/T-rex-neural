@@ -27,6 +27,7 @@ class DatasetCreator():
         global key_buffer, frame_stamp
 
         self.list_of_outputs = []
+        self.list_of_inputs = []
         self.max_stamp = 0
 
     def write_to_file(self, keys):
@@ -51,14 +52,14 @@ class DatasetCreator():
 
         for stamp in range(max_stamp):
             if stamp != regex[0]:
-                new_lines.append([0, 0])
+                new_lines.append([0, 0, 1])
             else:
                 if lines[0][0] == str("Key.up"):
-                    new_lines.append([1, 0])
+                    new_lines.append([1, 0, 0])
                 elif lines[0][0] == str("Key.down"):
-                    new_lines.append([0, 1])
+                    new_lines.append([0, 1, 0])
                 else:
-                    new_lines.append([0, 0])
+                    new_lines.append([0, 0, 1])
                     print("i should not be here!")
                 regex.pop(0)
                 lines.pop(0)
@@ -70,7 +71,7 @@ class DatasetCreator():
 
     def create_dataset(self, name="test.avi"):
         global key_buffer, frame_stamp, listener
-        self.empty_dataset()
+        self.dump_dataset()
         # start keyboard listener
         listener.start()
         # writer settings
@@ -108,19 +109,146 @@ class DatasetCreator():
     def get_list_of_outputs(self):
         return self.list_of_outputs
 
+    def get_list_of_inputs(self):
+        return self.list_of_inputs
+
     def get_max_stamp(self):
         return self.max_stamp
 
-    def empty_dataset(self):
+    def dump_dataset(self):
         global key_buffer, frame_stamp
         key_buffer = []
         frame_stamp = 0
 
+    def write_to_file(self, name, data):
+        name = name + ".txt"
+        with open(name, "w") as file:
+            file.write(str(data) + ";\n")
+        print("file was written succesfully!")
+
+    def inputs_from_img(self, image):
+        processed_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        (thresh, processed_img) = cv2.threshold(processed_img, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+
+        roiM = processed_img[150, 85:400]
+        roiD = processed_img[175, 85:400]
+
+        # find all black pixels at roi
+        firstM = np.where(roiM == 0)
+        firstD = np.where(roiD == 0)
+
+        input = [400, 400]
+
+        # if is not empty -> rewrite
+        if len(firstD[0]) != 0:
+            input[0] = firstD[0][0]
+        if len(firstM[0]) != 0:
+            input[1] = firstM[0][0]
+
+        # cv2.line(processed_img, (90, 155), (400, 155), (0, 0, 0), 1)
+        # cv2.line(processed_img, (90, 175), (400, 175), (0, 0, 0), 1)
+
+        return input
+
+    def video_to_files(self):
+        self.fill_empty_inputs("keys.txt")
+        cap = cv2.VideoCapture("neuro_test2.avi")
+        outputs = self.get_list_of_outputs()
+        current_stamp = 0.0
+        inputs = []
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if ret and outputs:
+                inputs.append(self.inputs_from_img(frame))
+                current_stamp += 1
+
+            progress = int((current_stamp / self.get_max_stamp()) * 100.0)
+            if (progress % 10) == 0:
+                print("progress: {}".format(progress))
+
+            if progress == 100:
+                print("inputs: {} \n labeled_outputs: {}".format(inputs, outputs))
+                break
+        self.write_to_file("inputs", inputs)
+        self.write_to_file("outputs", outputs)
+
+    def read_dataset_from_file(self, name):
+        read_data = []
+        name = name + ".txt"
+        with open(name, "r") as file:
+            r = file.read()
+            regex = re.findall(r"\d+, \d+, \d+|\d+, \d+", r)
+            for item in regex:
+                read_data.append(list(np.fromstring(item, dtype=int, sep=',')))
+        return read_data
+
+    def get_indices_of_separates(self):
+        inputs = self.read_dataset_from_file("inputs")
+        outputs = self.read_dataset_from_file("outputs")
+
+        # indices for jump -> inputs, outputs
+        jump_indices = [i for i, x in enumerate(outputs) if x == [1, 0, 0]]
+
+        # indices for duck
+        duck_indices = [i for i, x in enumerate(outputs) if x == [0, 1, 0]]
+
+        # indices for no_action
+        noa_indices = [i for i, x in enumerate(outputs) if x == [0, 0, 1]]
+
+        return jump_indices, duck_indices, noa_indices
+
+    def get_rand_dataset_indices(self, volume=30000):
+        res = volume % 3
+        if res > 0:
+            volume -= res
+
+        jump_i, duck_i, noa_i = self.get_indices_of_separates()
+        r_jump_i = np.random.choice(jump_i, int(volume / 3))
+        r_duck_i = np.random.choice(duck_i, int(volume / 3))
+        r_noa_i = np.random.choice(noa_i, int(volume / 3))
+        return r_jump_i, r_duck_i, r_noa_i
+
+    def get_separated_dataset(self):
+        inputs = self.read_dataset_from_file("inputs")
+        outputs = self.read_dataset_from_file("outputs")
+
+        jump_i, duck_i, noa_i = self.get_rand_dataset_indices()
+
+        # separation for jump -> inputs, outputs
+        jump = [[inputs[i] for i in jump_i], [outputs[i] for i in jump_i]]
+
+        # separation for duck
+        duck = [[inputs[i] for i in duck_i], [outputs[i] for i in duck_i]]
+
+        # separation for no_action
+        no_action = [[inputs[i] for i in noa_i], [outputs[i] for i in noa_i]]
+
+        return jump, duck, no_action
+
+    def get_rand_dataset(self):
+        j, d, noa = self.get_separated_dataset()
+
+        inp = np.concatenate((j[0], d[0], noa[0]), axis=0)
+        tar = np.concatenate((j[1], d[1], noa[1]), axis=0)
+
+        indices = np.arange(len(inp))
+        np.random.shuffle(indices)
+
+        inp = [list(inp[i]) for i in indices]
+        tar = [list(tar[i]) for i in indices]
+
+        return inp, tar
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    DsC = DatasetCreator()
-    DsC.create_dataset("neuro_test2.avi")
+    dsc = DatasetCreator()
+    # DsC.create_dataset("neuro_test2.avi")
+    # print(dsc.get_rand_dataset())
+    inp, tar = dsc.get_rand_dataset()
+    print(inp)
+    print(tar)
+    # print("inputs: {} \n outputs: {}".format(DsC.get_list_of_inputs(),DsC.get_list_of_outputs()))
     pass
 
 # regex cheat sheet:  https://www.rexegg.com/regex-quickstart.html

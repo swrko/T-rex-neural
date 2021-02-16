@@ -3,7 +3,7 @@ import neuroMTX as NN
 import cv2
 from mss import mss
 import os
-import time
+
 
 def inputs_from_process_img(image):
     # convert to gray
@@ -28,19 +28,14 @@ def inputs_from_process_img(image):
     cv2.line(processed_img, (90, 155), (400, 155), (0, 0, 0), 1)
     cv2.line(processed_img, (90, 175), (400, 175), (0, 0, 0), 1)
 
-    # cv2.imshow('Line ROI', processed_img)
-
     return input
-
-    # print(firstM[0][0])  # distance
-    # len(firstM[0]) == 0 DAS IST GUT
 
 
 def train_NN(network, dsc):
     cap = cv2.VideoCapture("neuro_test2.avi")
     outputs = dsc.get_list_of_outputs()
 
-    current_stamp = 0
+    current_stamp = 0.0
     while cap.isOpened():
         ret, frame = cap.read()
         if ret and outputs:
@@ -62,6 +57,7 @@ def train_NN(network, dsc):
         if progress == 100:
             break
 
+
 def testNN(network):
     network.read_weights_from_file()
     # trained Network
@@ -76,22 +72,19 @@ def testNN(network):
 
         # TODO: apply outputs to game -> decide_function()
 
-
         if cv2.waitKey(15) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
 
+
 def main():
-    network = NN.NNetwork(2, 15, 2)
-    network.write_weights_to_file()
-    for i in range(10):
-        os.system("trainNN.py")
+    network = NN.NNetwork(2, 10, 3)
 
-
+    # network.write_weights_to_file()
+    # for i in range(5):
+    #     print("repeat {}/50".format(i))
+    #     os.system("trainNN.py")
+    testNN(network)
 
 if __name__ == '__main__':
     main()
-
-
-
-

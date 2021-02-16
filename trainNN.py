@@ -1,12 +1,8 @@
 import numpy as np
-import time
 import dataset_creator as DC
 import neuroMTX as NN
 import cv2
-from mss import mss
 
-
-# spustat ako script
 
 def inputs_from_process_img(image):
     # convert to gray
@@ -31,21 +27,19 @@ def inputs_from_process_img(image):
     cv2.line(processed_img, (90, 155), (400, 155), (0, 0, 0), 1)
     cv2.line(processed_img, (90, 175), (400, 175), (0, 0, 0), 1)
 
-    # cv2.imshow('Line ROI', processed_img)
-
     return input
 
 
 def main():
     # TODO: if not empty file with weigths read
-    network = NN.NNetwork(2, 15, 2)
+    network = NN.NNetwork(2, 10, 3)
     network.read_weights_from_file()
     dsc = DC.DatasetCreator()
     dsc.fill_empty_inputs("keys.txt")
     cap = cv2.VideoCapture("neuro_test2.avi")
     outputs = dsc.get_list_of_outputs()
-
-    current_stamp = 0
+    prg = 0
+    current_stamp = 0.0
     while cap.isOpened():
         ret, frame = cap.read()
         if ret and outputs:
@@ -60,8 +54,9 @@ def main():
                 break
             current_stamp += 1
 
-        progress = int((current_stamp / dsc.get_max_stamp()) * 100.0)
-        if (progress % 10) == 0:
+        progress = int((current_stamp / float(dsc.get_max_stamp())) * 100.0)
+        if (progress) == prg:
+            prg += 5
             print("progress: {}".format(progress))
 
         if progress == 100:
