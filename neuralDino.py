@@ -3,6 +3,26 @@ import neuroMTX as NN
 import cv2
 from mss import mss
 import os
+import neurolab as nl
+import dataset_creator as DSC
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import pyautogui
+from time import sleep
+
+
+def decide(outputs):
+    index_of_max = np.argmax(outputs[0])
+    if index_of_max == 0:
+        pyautogui.keyDown(' ')
+        sleep(0.02)
+        pyautogui.keyUp(' ')
+    elif index_of_max == 1:
+        pyautogui.keyDown('down')
+        sleep(0.25)
+        pyautogui.keyUp('down')
+    else:
+        pass
 
 
 def inputs_from_process_img(image):
@@ -28,7 +48,7 @@ def inputs_from_process_img(image):
     cv2.line(processed_img, (90, 155), (400, 155), (0, 0, 0), 1)
     cv2.line(processed_img, (90, 175), (400, 175), (0, 0, 0), 1)
 
-    return input
+    return list([list(input)])
 
 
 def train_NN(network, dsc):
@@ -71,6 +91,29 @@ def testNN(network):
         print("outputs: {}".format(outputs))
 
         # TODO: apply outputs to game -> decide_function()
+        if cv2.waitKey(15) & 0xFF == ord('q'):
+            cv2.destroyAllWindows()
+            break
+
+
+def testNL():
+    net = nl.load('test_prva.net')
+    sct = mss()
+
+    while (True):
+        screen_np = np.array(sct.grab({'top': 0, 'left': 0, 'width': 600, 'height': 200}))
+        inputs = inputs_from_process_img(screen_np)
+
+        # drawing of line ROI
+        cv2.line(screen_np, (90, 155), (400, 155), (0, 0, 0), 1)
+        cv2.line(screen_np, (90, 175), (400, 175), (0, 0, 0), 1)
+        cv2.imshow("Screencapture:", screen_np)
+
+        print("inputs: {}".format(inputs))
+        outputs = net.sim(inputs)
+        # print(inputs)
+        print("outputs: {}".format(outputs))
+        decide(outputs)
 
         if cv2.waitKey(15) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
@@ -78,13 +121,14 @@ def testNN(network):
 
 
 def main():
-    network = NN.NNetwork(2, 10, 3)
+    # network = NN.NNetwork(2, 10, 3)
 
     # network.write_weights_to_file()
     # for i in range(5):
     #     print("repeat {}/50".format(i))
     #     os.system("trainNN.py")
-    testNN(network)
+    testNL()
+
 
 if __name__ == '__main__':
     main()

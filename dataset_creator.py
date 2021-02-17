@@ -4,6 +4,7 @@ import time
 from mss import mss
 from pynput.keyboard import Key, Listener
 import re
+import os
 
 key_buffer = []
 frame_stamp = 0
@@ -30,7 +31,7 @@ class DatasetCreator():
         self.list_of_inputs = []
         self.max_stamp = 0
 
-    def write_to_file(self, keys):
+    def write_keys_to_file(self, keys):
         global key_buffer
         with open("keys.txt", "a") as file:
             for key in keys:
@@ -95,12 +96,47 @@ class DatasetCreator():
 
             if frame_stamp % 100 == 0:
                 print("frame stamp: {}".format(frame_stamp))
-                self.write_to_file(key_buffer)
+                self.write_keys_to_file(key_buffer)
 
             if (cv2.waitKey(10) & 0xFF == ord('q')) or (frame_stamp == 50000):
                 key_buffer.append(frame_stamp)
-                self.write_to_file(key_buffer)
+                self.write_keys_to_file(key_buffer)
                 out.release()
+                cv2.destroyAllWindows()
+                break
+            # next frame
+            frame_stamp += 1
+
+    def create_dataset2(self):
+        global key_buffer, frame_stamp, listener
+        self.dump_dataset()
+        # start keyboard listener
+        listener.start()
+        # writer settings
+        # monitor recording settings
+        sct = mss()
+        monitor = {'top': 0, 'left': 0, 'width': 600, 'height': 200}
+        last_time = time.time()
+
+        while True:
+            frame = np.array(sct.grab(monitor))
+            frame = frame[:, :, :3]
+            frame = cv2.resize(frame, (600, 200))
+            frame_folder_path = r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'
+            frame_name = str(frame_stamp) + '.png'
+            cv2.imwrite(os.path.join(frame_folder_path, frame_name), frame)
+            cv2.imshow('frame', frame)
+
+            print('FPS: {} '.format((1.0 / (time.time() - last_time))))
+            last_time = time.time()
+
+            if frame_stamp % 500 == 0:
+                print("frame stamp: {}".format(frame_stamp))
+                self.write_keys_to_file(key_buffer)
+
+            if (cv2.waitKey(10) & 0xFF == ord('q')) or (frame_stamp == 50000):
+                key_buffer.append(frame_stamp)
+                self.write_keys_to_file(key_buffer)
                 cv2.destroyAllWindows()
                 break
             # next frame
@@ -239,15 +275,19 @@ class DatasetCreator():
 
         return inp, tar
 
+    def get_list_of_dir(self, dir_name):
+        return os.listdir(dir_name)
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     dsc = DatasetCreator()
     # DsC.create_dataset("neuro_test2.avi")
     # print(dsc.get_rand_dataset())
-    inp, tar = dsc.get_rand_dataset()
-    print(inp)
-    print(tar)
+    # inp, tar = dsc.get_rand_dataset()
+    dsc.create_dataset2()
+    dsc.fill_empty_inputs()
+    # dsc.create_dataset("neuro_test2.avi")
     # print("inputs: {} \n outputs: {}".format(DsC.get_list_of_inputs(),DsC.get_list_of_outputs()))
     pass
 
