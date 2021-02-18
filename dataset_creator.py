@@ -276,7 +276,16 @@ class DatasetCreator():
         return inp, tar
 
     def get_list_of_dir(self, dir_name):
-        return os.listdir(dir_name)
+        list = os.listdir(dir_name)
+        li_index = list.index(str(self.get_max_stamp()) + '.png')
+        os.remove(dir_name + "\\" + list[li_index])
+        list.pop(li_index)
+        return list
+
+    def rename_files_at_dir(self, src, dst):
+        dir_list = self.get_list_of_dir()
+        for frame_count, out in self.get_list_of_outputs():
+            pass
 
 
 # Press the green button in the gutter to run the script.
@@ -287,6 +296,9 @@ if __name__ == '__main__':
     # inp, tar = dsc.get_rand_dataset()
     dsc.create_dataset2()
     dsc.fill_empty_inputs()
+    # print(dsc.get_list_of_outputs())
+    # print(len(dsc.get_list_of_outputs()))
+    print(dsc.get_list_of_dir(r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'))
     # dsc.create_dataset("neuro_test2.avi")
     # print("inputs: {} \n outputs: {}".format(DsC.get_list_of_inputs(),DsC.get_list_of_outputs()))
     pass
