@@ -45,6 +45,7 @@ class DatasetCreator():
 
         regex = []
         lines = []
+
         for line in f_lines:
             # check for double key press
             r = int(re.findall(r"\d+", line)[0])
@@ -55,7 +56,6 @@ class DatasetCreator():
             else:
                 regex.append(r)
                 lines.append(line.split(","))
-
 
         max_stamp = max(regex)
         new_lines = []
@@ -226,7 +226,6 @@ class DatasetCreator():
         return read_data
 
     def get_indices_of_separates(self):
-        inputs = self.read_dataset_from_file("inputs")
         outputs = self.read_dataset_from_file("outputs")
 
         # indices for jump -> inputs, outputs
@@ -293,12 +292,19 @@ class DatasetCreator():
         dir_list = self.get_list_of_dir(dir)
         self.fill_empty_inputs()
         list_of_outputs = self.get_list_of_outputs()
+
         for frame in dir_list:
-            fstamp_index = int(frame.split('.')[0])
-            action = str(list_of_outputs[fstamp_index])
-            src = dir + "\\" + frame
-            dst = dir + "\\" + str(fstamp_index) + '_' + action + '.png'
-            os.rename(src, dst)
+            f_name = frame.split('.')[0]
+            if f_name.isnumeric():
+                fstamp_index = int(f_name)
+                if fstamp_index < len(list_of_outputs):
+                    action = str(list_of_outputs[fstamp_index])
+                    src = dir + "\\" + frame
+                    dst = dir + "\\" + str(fstamp_index) + '_' + action + '.png'
+                    os.rename(src, dst)
+            else:
+                print("cant resolve frame index from name\ncontinue")
+                break
 
     def frames_to_files(self):
         dir = r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'
@@ -318,9 +324,33 @@ class DatasetCreator():
 
         self.write_to_file("inputs", inputs)
         self.write_to_file("outputs", outputs)
-    #
-    # def check_dataset(self,dir):
-    #     dir_list = self.get_list_of_dir(dir)
+
+    def add_key_press_tolerance(self):
+        dir = r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'
+        self.fill_empty_inputs("keys.txt")
+        list_of_outputs = self.get_list_of_outputs()
+        dir_list = self.get_list_of_dir(dir)
+        for i in range(len(list_of_outputs)):
+            dir_list = self.get_list_of_dir(dir)
+            action = list_of_outputs[i]
+            if action == [0, 0, 1]:
+                pass
+            elif action == [1, 0, 0] or action == [0, 1, 0]:
+                f_name = str(i) + '_' + str(action) + '.png'
+                if f_name in dir_list:
+                    neigb_i = [i - 2, i - 1, i + 1, i + 2]
+                    # TODO: 10 framov pre skok
+                    # TODO: 14 framov pre podlez
+                    for neigb in neigb_i:
+                        neigb_name = str(neigb) + '_'
+                        match = [f for f in dir_list if f.startswith(neigb_name)]
+
+                        if match:
+                            match_name = str(match[0])
+                            src = dir + "\\" + match_name
+                            new_name = match_name.split('_')[0]
+                            dst = dir + "\\" + new_name + '_' + str(action) + '.png'
+                            os.rename(src, dst)
 
 
 # Press the green button in the gutter to run the script.
@@ -334,11 +364,8 @@ if __name__ == '__main__':
     # print(dsc.get_list_of_dir(r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'))
 
     # dsc.rename_files_at_dir(r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames')
-
-    dsc.fill_empty_inputs()
-    list = dsc.get_list_of_outputs()
-    print(list[48231])
-    print(list[48841])
+    dsc.rename_files_at_dir(r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames')
+    dsc.add_key_press_tolerance()
 
     # dsc.create_dataset("neuro_test2.avi")
     # print("inputs: {} \n outputs: {}".format(DsC.get_list_of_inputs(),DsC.get_list_of_outputs()))
