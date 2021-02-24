@@ -5,6 +5,7 @@ from mss import mss
 from pynput.keyboard import Key, Listener
 import re
 import os
+from tqdm import tqdm
 
 key_buffer = []
 frame_stamp = 0
@@ -329,8 +330,8 @@ class DatasetCreator():
         dir = r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'
         self.fill_empty_inputs("keys.txt")
         list_of_outputs = self.get_list_of_outputs()
-        dir_list = self.get_list_of_dir(dir)
-        for i in range(len(list_of_outputs)):
+        print("adding tolerance")
+        for i in tqdm(range(len(list_of_outputs))):
             dir_list = self.get_list_of_dir(dir)
             action = list_of_outputs[i]
             if action == [0, 0, 1]:
@@ -338,13 +339,14 @@ class DatasetCreator():
             elif action == [1, 0, 0] or action == [0, 1, 0]:
                 f_name = str(i) + '_' + str(action) + '.png'
                 if f_name in dir_list:
-                    neigb_i = [i - 2, i - 1, i + 1, i + 2]
-                    # TODO: 10 framov pre skok
-                    # TODO: 14 framov pre podlez
+                    if action == [1, 0, 0]:
+                        neigb_i = [i - 2, i - 1, i + 1, i + 2, i + 3, i + 4, i + 5, i + 6, i + 7, i + 8, i + 9, i + 10]
+                    else:
+                        neigb_i = [i + 1, i + 2, i + 3, i + 4, i + 5, i + 6, i + 7, i + 8, i + 9, i + 10, i + 11,
+                                   i + 12, i + 13, i + 14]
                     for neigb in neigb_i:
                         neigb_name = str(neigb) + '_'
                         match = [f for f in dir_list if f.startswith(neigb_name)]
-
                         if match:
                             match_name = str(match[0])
                             src = dir + "\\" + match_name
