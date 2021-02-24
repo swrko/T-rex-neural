@@ -168,7 +168,7 @@ class DatasetCreator():
         name = name + ".txt"
         with open(name, "w") as file:
             file.write(str(data) + ";\n")
-        print("file was written succesfully!")
+        print("file: {} was written succesfully!".format(name))
 
     def inputs_from_img(self, image):
         processed_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -326,6 +326,30 @@ class DatasetCreator():
         self.write_to_file("inputs", inputs)
         self.write_to_file("outputs", outputs)
 
+    def labeled_frames_to_files(self):
+        dir = r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'
+        self.fill_empty_inputs("keys.txt")
+        list_of_outputs = self.get_list_of_outputs()
+        dir_list = self.get_list_of_dir(dir)
+
+        inputs = []
+        outputs = []
+        # while dir_list:
+        len_dir = len(dir_list)
+        for i in tqdm(range(len_dir)):
+            file_name = dir_list[0].split('.')[0].split('_')
+            if len(file_name) > 1:
+                # fstamp_index = int(file_name[0])
+                labeled_output = file_name[1]
+                frame_name = dir + "\\" + dir_list[0]
+                frame = cv2.imread(frame_name)
+                inputs.append(self.inputs_from_img(frame))
+                outputs.append(labeled_output)
+            dir_list.pop(0)
+
+        self.write_to_file("inputs", inputs)
+        self.write_to_file("outputs", outputs)
+
     def add_key_press_tolerance(self):
         dir = r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'
         self.fill_empty_inputs("keys.txt")
@@ -361,13 +385,12 @@ if __name__ == '__main__':
     # DsC.create_dataset("neuro_test2.avi")
     # print(dsc.get_rand_dataset())
     # inp, tar = dsc.get_rand_dataset()
-    # print(dsc.read_dataset_from_file("outputs"))
-    # dsc.frames_to_files()
+    print(dsc.read_dataset_from_file("inputs"))
+    # dsc.labeled_frames_to_files()
     # print(dsc.get_list_of_dir(r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'))
 
     # dsc.rename_files_at_dir(r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames')
-    dsc.rename_files_at_dir(r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames')
-    dsc.add_key_press_tolerance()
+    # dsc.add_key_press_tolerance()
 
     # dsc.create_dataset("neuro_test2.avi")
     # print("inputs: {} \n outputs: {}".format(DsC.get_list_of_inputs(),DsC.get_list_of_outputs()))
