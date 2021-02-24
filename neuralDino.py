@@ -9,17 +9,19 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pyautogui
 from time import sleep
+import _thread as th
 
 
 def decide(outputs):
     index_of_max = np.argmax(outputs[0])
-    if index_of_max == 0:
+    value_of_max = outputs[0][index_of_max]
+    if index_of_max == 0 and value_of_max >= 0.78:
         pyautogui.keyDown(' ')
         sleep(0.02)
         pyautogui.keyUp(' ')
-    elif index_of_max == 1:
+    elif index_of_max == 1 and value_of_max >= 0.5:
         pyautogui.keyDown('down')
-        sleep(0.25)
+        sleep(0.35)
         pyautogui.keyUp('down')
     else:
         pass
@@ -96,24 +98,28 @@ def testNN(network):
             break
 
 
+def trainNL():
+    pass
+
+
 def testNL():
-    net = nl.load('test_prva.net')
+    net = nl.load('test_druha.net')
     sct = mss()
 
     while (True):
         screen_np = np.array(sct.grab({'top': 0, 'left': 0, 'width': 600, 'height': 200}))
         inputs = inputs_from_process_img(screen_np)
 
-        # drawing of line ROI
-        cv2.line(screen_np, (90, 155), (400, 155), (0, 0, 0), 1)
-        cv2.line(screen_np, (90, 175), (400, 175), (0, 0, 0), 1)
-        cv2.imshow("Screencapture:", screen_np)
+        # # drawing of line ROI
+        # cv2.line(screen_np, (90, 155), (400, 155), (0, 0, 0), 1)
+        # cv2.line(screen_np, (90, 175), (400, 175), (0, 0, 0), 1)
+        # cv2.imshow("Screencapture:", screen_np)
 
-        print("inputs: {}".format(inputs))
+        # print("inputs: {}".format(inputs))
         outputs = net.sim(inputs)
         # print(inputs)
-        print("outputs: {}".format(outputs))
-        decide(outputs)
+        # print("outputs: {}".format(outputs))
+        th.start_new_thread(decide, (outputs,))
 
         if cv2.waitKey(15) & 0xFF == ord('q'):
             cv2.destroyAllWindows()

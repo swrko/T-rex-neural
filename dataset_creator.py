@@ -227,6 +227,7 @@ class DatasetCreator():
         return read_data
 
     def get_indices_of_separates(self):
+        # assuming the length of input and ouput file are same
         outputs = self.read_dataset_from_file("outputs")
 
         # indices for jump -> inputs, outputs
@@ -240,7 +241,7 @@ class DatasetCreator():
 
         return jump_indices, duck_indices, noa_indices
 
-    def get_rand_dataset_indices(self, volume=30000):
+    def get_rand_dataset_indices(self, volume=50000):
         res = volume % 3
         if res > 0:
             volume -= res
@@ -383,9 +384,9 @@ class DatasetCreator():
 if __name__ == '__main__':
     dsc = DatasetCreator()
     # DsC.create_dataset("neuro_test2.avi")
-    # print(dsc.get_rand_dataset())
+    print(dsc.get_rand_dataset())
     # inp, tar = dsc.get_rand_dataset()
-    print(dsc.read_dataset_from_file("inputs"))
+    # print(dsc.read_dataset_from_file("inputs"))
     # dsc.labeled_frames_to_files()
     # print(dsc.get_list_of_dir(r'C:\Users\Herny\Documents\shady skola\DP\T_rex\frames'))
 
