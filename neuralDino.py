@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import pyautogui
 from time import sleep
 import _thread as th
+from tqdm import tqdm
 
 
 def decide(outputs):
@@ -19,9 +20,23 @@ def decide(outputs):
         pyautogui.keyDown(' ')
         sleep(0.02)
         pyautogui.keyUp(' ')
-    elif index_of_max == 1 and value_of_max >= 0.5:
+    elif index_of_max == 1 and value_of_max > 0.5:
         pyautogui.keyDown('down')
-        sleep(0.35)
+        sleep(0.4)
+        pyautogui.keyUp('down')
+    else:
+        pass
+
+def decide2(outputs):
+    index_of_max = np.argmax(outputs)
+    value_of_max = outputs[index_of_max]
+    if index_of_max == 0 and value_of_max >= 0.78:
+        pyautogui.keyDown(' ')
+        sleep(0.02)
+        pyautogui.keyUp(' ')
+    elif index_of_max == 1 and value_of_max > 0.65:
+        pyautogui.keyDown('down')
+        sleep(0.4)
         pyautogui.keyUp('down')
     else:
         pass
@@ -80,19 +95,31 @@ def train_NN(network, dsc):
             break
 
 
+def train_NN2(network, dsc):
+    inp, tar = dsc.get_rand_dataset()
+    # print("inp: {}\ntar: {}".format(len(inp), len(tar)))
+    # print("inp: {}\ntar: {}".format(inp, tar))
+    t_error = 0
+    for i in tqdm(range(len(inp))):
+        t_error += network.train_gradient_descent(inp[i], tar[i])
+    print(t_error)
+    network.write_weights_to_file("my_neuro")
+    # net.trainf = nl.net.train.train_gd  # train function set to gradient descent
+    # error = net.train(inp, tar, epochs=200, show=1, goal=0.02)
+
+
 def testNN(network):
-    network.read_weights_from_file()
+    network.read_weights_from_file("my_neuro")
     # trained Network
     sct = mss()
 
     while (True):
         screen_np = np.array(sct.grab({'top': 0, 'left': 0, 'width': 600, 'height': 200}))
-        cv2.imshow("Screencapture:", screen_np)
         inputs = inputs_from_process_img(screen_np)
         outputs = network.feed_forward_propagation(inputs)
         print("outputs: {}".format(outputs))
+        th.start_new_thread(decide2, (outputs,))
 
-        # TODO: apply outputs to game -> decide_function()
         if cv2.waitKey(15) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
@@ -103,7 +130,7 @@ def trainNL():
 
 
 def testNL():
-    net = nl.load('test_druha.net')
+    net = nl.load('test_tretia.net')
     sct = mss()
 
     while (True):
@@ -127,14 +154,14 @@ def testNL():
 
 
 def main():
-    # network = NN.NNetwork(2, 10, 3)
-
+    network = NN.NNetwork(2, 10, 3)
+    dsc = DSC.DatasetCreator()
     # network.write_weights_to_file()
     # for i in range(5):
     #     print("repeat {}/50".format(i))
     #     os.system("trainNN.py")
-    testNL()
-
+    # train_NN2(network, dsc)
+    testNN(network)
 
 if __name__ == '__main__':
     main()
