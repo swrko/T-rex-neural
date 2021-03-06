@@ -34,6 +34,7 @@ class NNetwork(object):
         # feed_forward through 2nd layer
         self.z_3 = np.dot(self.a_2, self.w_2)
         self.outputs = self.sigmoid(self.z_3)
+        return self.outputs
 
     def sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
@@ -46,15 +47,16 @@ class NNetwork(object):
     # def derSigmoid(s):
     #     return s * (1.0 - s)
 
-    def normalize_inputs(self, inputs, min, max):
+    def normalize_inputs(self, inputs, max):
         # min = 0
         # max = 400
-        return inputs / max
-        new_inputs = []
-        for input in inputs:
-            new_input = (input - min) / (max - min)
-            new_inputs.append(new_input)
-        return np.array(new_inputs)
+        return [i / max for i in inputs[0]]
+        # return inputs / max
+        # new_inputs = []
+        # for input in inputs:
+        #     new_input = (input - min) / (max - min)
+        #     new_inputs.append(new_input)
+        # return np.array(new_inputs)
 
     def cost_function(self):
         return sum(((self.desired_outputs - self.outputs) ** 2.0) / 2.0)
@@ -67,13 +69,8 @@ class NNetwork(object):
         # dw_1 - derivative of cost function with respect to w_1 - aplication of bperor to weights
 
         delta_3 = np.multiply(-(self.desired_outputs - self.outputs), self.d_sigmoid(self.z_3))
-        # print("delta_3: {} , shape: {}  \n delta_3.T {} shape {}".format(delta_3, delta_3.shape,
-        #                                                                  np.reshape(delta_3, (1, -1)),
-        #                                                                  np.reshape(delta_3, (1, -1)).shape))
-        # print("a_2: {} shape: {} \n a_2.T {}  shape{}".format(self.a_2, self.a_2.shape, np.reshape(self.a_2, (-1, 1)),
-        #                                                       np.reshape(self.a_2, (-1, 1)).shape))
+
         dw_2 = np.dot(np.reshape(self.a_2, (-1, 1)), np.reshape(delta_3, (1, -1)))
-        # print("dw_2 : {} ".format(dw_2))
 
         delta_2 = np.dot(delta_3, self.w_2.T) * self.d_sigmoid(self.z_2)
         dw_1 = np.dot(np.reshape(self.inputs, (-1, 1)), np.reshape(delta_2, (1, -1)))
@@ -118,7 +115,7 @@ class NNetwork(object):
         return np.concatenate([self.get_weights1().ravel(), self.get_weights2().ravel()])
 
     def parse_weights(self, w):
-        # reshape
+        # unused metod
         w1 = w[0:self.n_inputs * self.n_hidden]
         w2 = w[self.n_inputs * self.n_hidden:(len(w))]
 
@@ -134,13 +131,15 @@ class NNetwork(object):
 
         # FFD
         self.forward_propagation()
-
+        # error = desired_outputs - output
+        error = self.cost_function()
         # calculate error
         dw_1, dw_2 = self.d_cost_function()
 
         # apply error to weights
         self.w_1 = self.w_1 - self.lr * dw_1
         self.w_2 = self.w_2 - self.lr * dw_2
+        return error
 
     def train_gradient_descent(self, inputs, desired_outputs):
         # for minibatch -> input has to be matrice, backprop error wil be summed for each input by matrix multiplication
@@ -148,23 +147,29 @@ class NNetwork(object):
         # print("inputs: {} \n outputs: {}".format(inputs,desired_outputs))
         self.set_inputs(self.normalize_inputs(inputs, 0, 400))
         # backprop - set_desired_output, FFD, gradient error, apply error
-        self.back_propagation(desired_outputs)
+        error = self.back_propagation(desired_outputs)
+        m_error = 0
+        # TODO: add calling an error function for futher comparison, method will need argument with err function
+        # MSE
+        for i in error:
+            m_error += i
+        return abs(m_error / len(error))
 
     def feed_forward_propagation(self, inputs):
         self.set_inputs(self.normalize_inputs(inputs, 0, 400))
         self.forward_propagation()
         return self.get_outputs()
 
-    def write_weights_to_file(self):
-        with open("neuroMTX.txt", "w") as file:
+    def write_weights_to_file(self, name):
+        with open(name + ".txt", "w") as file:
             file.write(str(self.get_weights1()) + ";\n")
             file.write(str(self.get_weights2()) + ";\n")
         print("Weights was written succesfully!")
 
-    def read_weights_from_file(self):
+    def read_weights_from_file(self, name):
         w1 = []
         w2 = []
-        with open("neuroMTX.txt", "r") as file:
+        with open(name + ".txt", "r") as file:
             r = file.read()
             r = r.split(";")
 
