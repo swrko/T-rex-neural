@@ -102,7 +102,7 @@ class DatasetCreator():
             print('FPS: {} '.format((1.0 / (time.time() - last_time))))
             last_time = time.time()
 
-            if frame_stamp % 100 == 0:
+            if frame_stamp % 500 == 0:
                 print("frame stamp: {}".format(frame_stamp))
                 self.write_keys_to_file(key_buffer)
 
@@ -384,7 +384,8 @@ class DatasetCreator():
 if __name__ == '__main__':
     dsc = DatasetCreator()
     # DsC.create_dataset("neuro_test2.avi")
-    print(dsc.get_rand_dataset())
+    # print(dsc.get_rand_dataset())
+    print(dsc.get_indices_of_separates())
     # inp, tar = dsc.get_rand_dataset()
     # print(dsc.read_dataset_from_file("inputs"))
     # dsc.labeled_frames_to_files()
