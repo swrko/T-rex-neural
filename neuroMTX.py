@@ -50,6 +50,8 @@ class NNetwork(object):
     def normalize_inputs(self, inputs, max):
         # min = 0
         # max = 400
+        # print(inputs)
+        # print([i / max for i in inputs[0]])
         return [i / max for i in inputs[0]]
         # return inputs / max
         # new_inputs = []
@@ -156,7 +158,7 @@ class NNetwork(object):
         return abs(m_error / len(error))
 
     def feed_forward_propagation(self, inputs):
-        self.set_inputs(self.normalize_inputs(inputs, 0, 400))
+        self.set_inputs(self.normalize_inputs(inputs, 400))
         self.forward_propagation()
         return self.get_outputs()
 

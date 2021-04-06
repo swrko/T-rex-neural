@@ -47,8 +47,12 @@ def inputs_from_process_img(image):
     processed_img = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     (thresh, processed_img) = cv2.threshold(processed_img, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
 
-    roiM = processed_img[150, 85:400]
-    roiD = processed_img[175, 85:400]
+    # povodne
+    # roiM = processed_img[150, 85:400]
+    # roiD = processed_img[175, 85:400]
+
+    roiM = processed_img[100, 85:500]
+    roiD = processed_img[120, 85:500]
 
     # find all black pixels at roi
     firstM = np.where(roiM == 0)
@@ -61,10 +65,14 @@ def inputs_from_process_img(image):
         input[0] = firstD[0][0]
     if len(firstM[0]) != 0:
         input[1] = firstM[0][0]
+    # original values
+    # cv2.line(processed_img, (90, 155), (400, 155), (0, 0, 0), 1)
+    # cv2.line(processed_img, (90, 175), (400, 175), (0, 0, 0), 1)
 
-    cv2.line(processed_img, (90, 155), (400, 155), (0, 0, 0), 1)
-    cv2.line(processed_img, (90, 175), (400, 175), (0, 0, 0), 1)
-
+    # great but comennted for compute power
+    # cv2.line(processed_img, (85, 100), (500, 100), (0, 0, 0), 1)
+    # cv2.line(processed_img, (85, 120), (500, 120), (0, 0, 0), 1)
+    # cv2.imshow('dsad', processed_img)
     return list([list(input)])
 
 
@@ -114,7 +122,8 @@ def testNN(network):
     sct = mss()
 
     while (True):
-        screen_np = np.array(sct.grab({'top': 0, 'left': 0, 'width': 600, 'height': 200}))
+        screen_np = np.array(sct.grab({'top': 100, 'left': 0, 'width': 600, 'height': 200}))
+        # screen_np = np.array(sct.grab({'top': 0, 'left':0, 'width': 600, 'height': 200}))
         inputs = inputs_from_process_img(screen_np)
         outputs = network.feed_forward_propagation(inputs)
         print("outputs: {}".format(outputs))
